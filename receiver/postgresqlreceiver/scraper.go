@@ -5,7 +5,6 @@ package postgresqlreceiver // import "github.com/open-telemetry/opentelemetry-co
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -325,7 +324,7 @@ func (p *postgreSQLScraper) collectDatabaseLocks(
 		return
 	}
 	for _, dbLock := range dbLocks {
-		p.mb.RecordPostgresqlDatabaseLocksDataPoint(now, dbLock.locks, dbLock.relation, dbLock.mode, dbLock.lockType)
+		p.mb.RecordPostgresqlDatabaseLocksDataPoint(now, int64(len(dbLocks)), dbLock.mode, dbLock.lockType, dbLock.transactionID, dbLock.pid, dbLock.clientAddr, dbLock.duration, dbLock.queryState, dbLock.query)
 	}
 }
 
@@ -388,16 +387,16 @@ func (p *postgreSQLScraper) collectWalAge(
 	client client,
 	errs *errsMux,
 ) {
-	walAge, err := client.getLatestWalAgeSeconds(ctx)
-	if errors.Is(err, errNoLastArchive) {
-		// return no error as there is no last archive to derive the value from
-		return
-	}
-	if err != nil {
-		errs.addPartial(fmt.Errorf("unable to determine latest WAL age: %w", err))
-		return
-	}
-	p.mb.RecordPostgresqlWalAgeDataPoint(now, walAge)
+	// walAge, err := client.getLatestWalAgeSeconds(ctx)
+	// if errors.Is(err, errNoLastArchive) {
+	// 	// return no error as there is no last archive to derive the value from
+	// 	return
+	// }
+	// if err != nil {
+	// 	errs.addPartial(fmt.Errorf("unable to determine latest WAL age: %w", err))
+	// 	return
+	// }
+	// p.mb.RecordPostgresqlWalAgeDataPoint(now, walAge)
 }
 
 func (p *postgreSQLScraper) retrieveDatabaseStats(
